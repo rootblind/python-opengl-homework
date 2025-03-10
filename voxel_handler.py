@@ -145,3 +145,44 @@ class VoxelHandler:
 
             return voxel_id, voxel_index, voxel_local_pos, chunk
         return 0, 0, 0, 0
+    
+    def check_collision(self, start_pos, end_pos):
+        current_voxel_pos = glm.ivec3(start_pos)
+        next_voxel_pos = glm.ivec3(end_pos)
+
+        x1, y1, z1 = current_voxel_pos
+        x2, y2, z2 = next_voxel_pos
+
+        dx = glm.sign(x2 - x1)
+        delta_x = min(dx / (x2 - x1), 10000000.0) if dx != 0 else 10000000.0
+        max_x = delta_x * (1.0 - glm.fract(x1)) if dx > 0 else delta_x * glm.fract(x1)
+
+        dy = glm.sign(y2 - y1)
+        delta_y = min(dy / (y2 - y1), 10000000.0) if dy != 0 else 10000000.0
+        max_y = delta_y * (1.0 - glm.fract(y1)) if dy > 0 else delta_y * glm.fract(y1)
+
+        dz = glm.sign(z2 - z1)
+        delta_z = min(dz / (z2 - z1), 10000000.0) if dz != 0 else 10000000.0
+        max_z = delta_z * (1.0 - glm.fract(z1)) if dz > 0 else delta_z * glm.fract(z1)
+
+        while not (max_x > 1.0 and max_y > 1.0 and max_z > 1.0):
+            result = self.get_voxel_id(next_voxel_pos)
+            if result[0]: # collision detected
+                return True
+            
+            if max_x < max_y:
+                if max_x < max_z:
+                    x1 += dx
+                    max_x += delta_x
+                else:
+                    z1 += dz
+                    max_z += delta_z
+            else:
+                if max_y < max_z:
+                    y1 += dy
+                    max_y += delta_y
+                else:
+                    z1 += dz
+                    max_z += delta_z
+
+        return False # no collision

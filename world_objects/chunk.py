@@ -36,8 +36,13 @@ class Chunk:
 
         # fill chunk
         cx, cy, cz = glm.ivec3(self.position) * CHUNK_SIZE
+        
+        # Compute player's chunk (outside @njit)
+        player_x, _, player_z = PLAYER_POS  # Extract player's x and z
+        player_chunk_x = int(player_x) // CHUNK_SIZE
+        player_chunk_z = int(player_z) // CHUNK_SIZE
 
-        self.generate_terrain(voxels, cx, cy, cz)
+        self.generate_terrain(voxels, cx, cy, cz, player_chunk_x, player_chunk_z)
         
         if np.any(voxels):
             self.is_empty = False
@@ -46,7 +51,10 @@ class Chunk:
     
     @staticmethod
     @njit
-    def generate_terrain(voxels, cx, cy, cz):
+    def generate_terrain(voxels, cx, cy, cz, player_chunk_x, player_chunk_z):
+        chunk_x = cx // CHUNK_SIZE
+        chunk_z = cz // CHUNK_SIZE
+
         for x in range(CHUNK_SIZE):
             wx = x + cx
             for z in range(CHUNK_SIZE):
@@ -57,4 +65,11 @@ class Chunk:
                 for y in range(local_height):
                     wy = y + cy
                     set_voxel_id(voxels, x, y, z, wx, wy, wz, world_height)
+
+                    # If this is the player's chunk, add a STONE border
+                if chunk_x == player_chunk_x and chunk_z == player_chunk_z:
+                        if ROAD_HEIGHT >= cy and (x < ROAD_WIDTH or x > CHUNK_SIZE - 1 - ROAD_WIDTH or z < ROAD_WIDTH or z > CHUNK_SIZE - 1 - ROAD_WIDTH):
+                            road_y = ROAD_HEIGHT - cy
+                            if 0 <= road_y < CHUNK_SIZE - 1:
+                                voxels[get_index(x, road_y, z)] = STONE
 

@@ -5,6 +5,11 @@ from settings import *
 class Player(Camera):
     def __init__(self, app, position=PLAYER_POS, yaw=-90, pitch=0):
         self.app = app
+        self.position = position
+        self.up = glm.vec3(0, 1, 0)
+        self.right = glm.vec3(1, 0, 0)
+        self.forward = glm.vec3(0, 0, -1)
+
         super().__init__(position, yaw, pitch)
 
     def update(self):
@@ -29,17 +34,26 @@ class Player(Camera):
             self.rotate_pitch(delta_y=mouse_dy * MOUSE_SENSITIVITY)
 
     def keyboard_control(self):
+        voxel_handler = self.app.scene.world.voxel_handler
         key_state = pg.key.get_pressed()
         vel = PLAYER_SPEED * self.app.delta_time
+        noclip = False
+        voxel_proximity = 0.5
         if key_state[pg.K_w]:
-            self.move_forward(vel)
+            if noclip or not voxel_handler.check_collision(self.position, self.position + self.forward * (vel + voxel_proximity)):
+                self.move_forward(vel)
         if key_state[pg.K_s]:
-            self.move_back(vel)
+            if noclip or not voxel_handler.check_collision(self.position, self.position - self.forward * (vel + voxel_proximity)):
+                self.move_back(vel)
         if key_state[pg.K_d]:
-            self.move_right(vel)
+            if noclip or not voxel_handler.check_collision(self.position, self.position + self.right * (vel + voxel_proximity)):
+                self.move_right(vel)
         if key_state[pg.K_a]:
-            self.move_left(vel)
+            if noclip or not voxel_handler.check_collision(self.position, self.position - self.right * (vel + voxel_proximity)):
+                self.move_left(vel)
         if key_state[pg.K_SPACE]:
-            self.move_up(vel)
+            if noclip or not voxel_handler.check_collision(self.position, self.position + self.up * (vel + voxel_proximity)):
+                self.move_up(vel)
         if key_state[pg.K_LSHIFT]:
-            self.move_down(vel)
+            if noclip or not voxel_handler.check_collision(self.position, self.position - self.up * (vel + voxel_proximity)):
+                self.move_down(vel)
