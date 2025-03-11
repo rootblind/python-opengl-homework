@@ -18,8 +18,8 @@ class VoxelHandler:
         self.new_voxel_id = 1
 
     def add_voxel(self):
-        _, ly, _ = self.voxel_local_pos
-        if self.voxel_id and ly < CHUNK_SIZE - 1:
+        _, ly, _ = self.voxel_world_pos
+        if self.voxel_id and ly < CHUNK_SIZE * 2 - 1 and ly > -CHUNK_SIZE:
             result = self.get_voxel_id(self.voxel_world_pos + self.voxel_normal)
 
             if not result[0]:
